@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require "./modules" # for RandomTag
+
+ENV["VAGRANT_DEFAULT_PROVIDER"] = "virtualbox"
+
+Vagrant.configure("2") do |config|
+  config.vm.provider :virtualbox do |provider|
+    # set unique vm name
+    provider.name = "qrfactory_server-" + RandomTag::Tag
+  end
+
+  config.ssh.username = "vagrant"
+  #config.ssh.private_key_path = "~/.vagrant.d/insecure_private_key" #not needed for vagrant > 1.7 on virtualbox
+  config.ssh.forward_agent = true
+  
+  config.vm.box = "tl_debian_jessie_64bit_30gb"  
+  config.vm.box_url = "https://s3-us-west-1.amazonaws.com/terminal-labs-vagrant-boxes/tl_debian_jessie_64bit_30gb.box"
+  config.vm.synced_folder ".", "/vagrant", type: "rsync"
+
+  config.vm.provision :salt do |salt|
+    salt.bootstrap_options = "-P"
+    salt.verbose = true
+  end
+  config.vm.provision "shell", path: "provisioners/provisioner_virtualbox.sh", keep_color: true
+  config.vm.provision "shell", inline: "sudo salt-call --local state.highstate --log-level info --no-color", keep_color: true
+  
+  config.vm.network :forwarded_port, :guest => 8001, :host => 8001, auto_correct: true
+  config.vm.network :forwarded_port, :guest => 8002, :host => 8002, auto_correct: true
+  config.vm.network :forwarded_port, :guest => 80, :host => 8080, auto_correct: true
+  config.vm.network :private_network, ip: "192.168.33.10"
+end

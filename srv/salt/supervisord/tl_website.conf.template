@@ -1,0 +1,7 @@
+[program:tl_website]
+command=/home/qrfactory_server/venv/bin/uwsgi --socket app.sock --wsgi-file qrfactory_flask_app/app.py --chmod-socket=666 --logto=uwsgi.log
+directory=/home/qrfactory_server
+user=qrfactory_server
+autostart=true
+autorestart=true
+startretries=3
